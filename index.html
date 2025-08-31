@@ -1,421 +1,1494 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MadaLuxe | Distributeur de Meubles Haut de Gamme à Madagascar</title>
-    <meta name="description" content="MadaLuxe sélectionne les meubles les plus exclusifs de Madagascar. Paiement sécurisé en 2 fois - 50% à la commande, 50% à la livraison.">
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Planificateur 3D - Objectif: 45 000 000 Ar</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <!-- Custom Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #6a40e6;
+            --primary-dark: #5533b3;
+            --accent-color: #ff9d00;
+            --success-color: #00c853;
+            --warning-color: #ffab00;
+            --danger-color: #ff1744;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --text-light: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        #three-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 960px;
+            position: relative;
+            z-index: 1;
+            background: rgba(26, 26, 26, 0.85);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid #3d3d3d;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(106, 64, 230, 0.2);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .progress-bar-red { background-color: var(--danger-color); }
+        .progress-bar-yellow { background-color: var(--warning-color); }
+        .progress-bar-green { background-color: var(--success-color); }
+
+        .task-card {
+            background-color: #333;
+            border-left: 5px solid;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .task-card.completed {
+            background-color: rgba(0, 200, 83, 0.15);
+            border-left-color: var(--success-color);
+        }
+
+        .task-card.pending {
+            border-left-color: var(--warning-color);
+        }
+
+        .task-card.unmet {
+            border-left-color: var(--danger-color);
+        }
+
+        .form-control, .form-select {
+            background-color: #1f1f1f;
+            border: 1px solid #4a4a4a;
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #1f1f1f;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(106, 64, 230, 0.25);
+            color: var(--text-light);
+        }
+
+        .day-heading {
+            cursor: pointer;
+        }
+
+        .tasks-container {
+            display: none;
+        }
+
+        .financial-section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .financial-section.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .pack-details summary {
+            cursor: pointer;
+            padding: 0.5rem 0;
+            font-weight: 500;
+        }
+
+        .pack-details ul {
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+            border-left: 2px solid #555;
+        }
+
+        .month-section {
+            background-color: #1f1f1f;
+            border: 2px solid #555;
+            transition: transform 0.5s ease;
+        }
+
+        .month-section:hover {
+            transform: perspective(1000px) translateY(-5px);
+        }
+
+        .week-section {
+            background-color: #2a2a2a;
+            border-left: 5px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .week-section.open {
+            border-color: var(--success-color);
+        }
+
+        .month-header, .week-header {
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .month-header:hover, .week-header:hover {
+            background-color: #333;
+        }
+
+        /* Game elements */
+        .xp-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 0.5s ease;
+        }
+
+        .achievement-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .floating-coin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: gold;
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-color);
+            opacity: 0;
+            z-index: 100;
+        }
+
+        .level-up {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .task-completion-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 200, 83, 0.3) 0%, transparent 70%);
+            border-radius: inherit;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--primary-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6a40e6, #5533b3);
+        }
+
+        .user-avatar.active {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .leaderboard {
+            background: linear-gradient(135deg, var(--card-bg), #333);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .leaderboard-rank {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-weight: bold;
+        }
+
+        .leaderboard-item.first .leaderboard-rank {
+            background: gold;
+            color: #000;
+        }
+
+        .leaderboard-item.second .leaderboard-rank {
+            background: silver;
+            color: #000;
+        }
+
+        .leaderboard-item.third .leaderboard-rank {
+            background: #cd7f32; /* Bronze */
+            color: #000;
+        }
+
+        .objective-card {
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .objective-card.completed {
+            border-left-color: var(--success-color);
+        }
+
+        .objective-card.failed {
+            border-left-color: var(--danger-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="#" class="logo">Mada<span>Luxe</span></a>
-            <div class="nav-links">
-                <a href="#accueil">Accueil</a>
-                <a href="#nouveautes">Nouveautés</a>
-                <a href="#collections">Collections</a>
-                <a href="#fonctionnement">Comment ça marche</a>
-                <a href="#contact">Contact</a>
-            </div>
-            <div class="social-header">
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            </div>
-            <div class="mobile-menu">
-                <i class="fas fa-bars"></i>
-            </div>
-        </div>
-    </nav>
+    <div id="three-container"></div>
 
-    <!-- Hero Section -->
-    <section id="accueil" class="hero">
-        <div class="hero-content">
-            <h1 class="title-animate">MadaLuxe - L'Excellence Malagasy</h1>
-            <p class="subtitle-animate">Nous sélectionnons pour vous les pièces les plus exclusives du pays</p>
-            <div class="hero-buttons">
-                <a href="#nouveautes" class="btn btn-primary pulse">Voir les arrivages</a>
-                <a href="#fonctionnement" class="btn btn-outline">Notre processus</a>
-            </div>
-        </div>
-        <div class="hero-slideshow">
-            <div class="slide active" style="background-image: url('images/hero-1.jpg')"></div>
-            <div class="slide" style="background-image: url('images/hero-2.jpg')"></div>
-            <div class="slide" style="background-image: url('images/hero-3.jpg')"></div>
-        </div>
-        <div class="hero-overlay"></div>
-    </section>
-
-    <!-- Section Fonctionnement -->
-    <section id="fonctionnement" class="fonctionnement">
-        <div class="container">
-            <h2>Notre Processus d'Achat</h2>
-            <p class="section-subtitle">Simple, sécurisé et adapté à vos besoins</p>
-            
-            <div class="steps-container">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3><i class="fas fa-search"></i> Découverte</h3>
-                        <p>Parcourez notre collection en ligne ou visitez notre showroom à Antananarivo. Nos conseillers sont à votre disposition pour vous guider.</p>
-                    </div>
+    <main class="container py-5">
+        <!-- Header et sélection de l'utilisateur -->
+        <header class="text-center mb-5">
+            <div class="d-flex justify-content-center align-items-center mb-3">
+                <div class="user-avatar active me-4" id="wells-avatar">
+                    👨‍💼
                 </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3><i class="fas fa-handshake"></i> Validation</h3>
-                        <p>Choisissez votre pièce favorite et validez-la avec notre équipe par téléphone, WhatsApp ou email.</p>
-                    </div>
+                <div>
+                    <h1 class="display-5 fw-bold text-light mb-0">Planificateur 3D</h1>
+                    <h2 class="h5 text-secondary">Objectif : 45 000 000 Ar</h2>
                 </div>
-                
-                <div class="step highlight">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3><i class="fas fa-money-bill-wave"></i> Paiement Sécurisé</h3>
-                        <p><strong>50% à la commande</strong> par virement, Mobile Money ou espèces.<br>
-                        <strong>50% à la livraison</strong> après inspection des produits.</p>
-                        <div class="payment-methods">
-                            <i class="fas fa-mobile-alt" title="Mobile Money"></i>
-                            <i class="fas fa-university" title="Virement Bancaire"></i>
-                            <i class="fas fa-money-bill" title="Espèces"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3><i class="fas fa-truck"></i> Livraison & Installation</h3>
-                        <p>Nous livrons dans toute l'île avec un suivi rigoureux. Nos équipes peuvent installer les meubles si nécessaire.</p>
-                    </div>
+                <div class="user-avatar ms-4" id="anna-avatar">
+                    👩‍💼
                 </div>
             </div>
             
-            <div class="guarantee">
-                <div class="guarantee-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <h4>Garantie Satisfait ou Remboursé</h4>
-                    <p>7 jours pour changer d'avis après réception</p>
+            <div class="d-flex justify-content-center gap-3 mt-3">
+                <button id="wells-btn" class="btn btn-outline-light active">
+                    <i class="fas fa-user me-2"></i>Wells
+                </button>
+                <button id="anna-btn" class="btn btn-outline-light">
+                    <i class="fas fa-user me-2"></i>Anna
+                </button>
+            </div>
+
+            <!-- XP and Level System -->
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-muted">Niveau <span id="user-level">1</span></span>
+                    <span class="small text-muted"><span id="user-xp">0</span>/<span id="next-level-xp">100</span> XP</span>
                 </div>
-                <div class="guarantee-card">
-                    <i class="fas fa-certificate"></i>
-                    <h4>Certificat d'Authenticité</h4>
-                    <p>Pour toutes nos pièces premium</p>
-                </div>
-                <div class="guarantee-card">
-                    <i class="fas fa-lock"></i>
-                    <h4>Paiement Sécurisé</h4>
-                    <p>Protection maximale de vos transactions</p>
+                <div class="progress" style="height: 10px; border-radius: 5px;">
+                    <div class="xp-bar" id="xp-bar" style="width: 0%"></div>
                 </div>
             </div>
+        </header>
+
+        <!-- Stats Section -->
+        <section class="mb-4">
+            <h2 class="h4 fw-bold mb-3 text-light text-center">Statistiques</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="completed-tasks">0</div>
+                    <div class="stat-label">Tâches Complétées</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sales-count">0</div>
+                    <div class="stat-label">Ventes Réalisées</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="meetings-count">0</div>
+                    <div class="stat-label">RDV Planifiés</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="success-rate">0%</div>
+                    <div class="stat-label">Taux de Réussite</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Objectives Section -->
+        <section class="mb-4">
+            <h2 class="h4 fw-bold mb-3 text-light">Objectifs</h2>
+            <div class="row" id="objectives-container">
+                <!-- Objectifs seront chargés dynamiquement -->
+            </div>
+        </section>
+
+        <!-- Section Suivi d'Objectifs -->
+        <section class="mb-5">
+            <h2 class="h4 fw-bold mb-3 text-light">Suivi d'Objectifs</h2>
+            <div class="card p-4">
+                <div id="progress-bars-container">
+                    <!-- Les barres de progression seront insérées ici par JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Bouton pour afficher la section financière -->
+        <div class="text-center mb-4">
+            <button id="toggle-financial-btn" class="btn btn-outline-success">
+                <i class="fas fa-coins me-2"></i>Afficher le suivi financier
+            </button>
         </div>
-    </section>
 
-    <!-- Section Nouveautés -->
-    <section id="nouveautes" class="nouveautes">
-        <div class="container">
-            <div class="section-header">
-                <h2>Nos Nouveaux Arrivages</h2>
-                <p>Découvrez les dernières pièces ajoutées à notre collection</p>
-            </div>
-
-            <div class="produits-grid">
-                <!-- Produit 1 -->
-                <div class="produit-card nouveau">
-                    <div class="produit-badge">Nouveau</div>
-                    <div class="produit-image">
-                        <img src="images/canapé-rotin-luxe.jpg" alt="Canapé en rotin premium avec coussins en lin">
-                        <div class="quick-view">Voir détails</div>
-                    </div>
-                    <div class="produit-info">
-                        <h3>Canapé "Tana" en Rotin Doré</h3>
-                        <div class="produit-meta">
-                            <span><i class="fas fa-ruler-combined"></i> L220 x P95 x H75cm</span>
-                            <span><i class="fas fa-palette"></i> Doré/Beige</span>
-                        </div>
-                        <div class="produit-prix">8 900 000 Ar</div>
-                        <div class="produit-actions">
-                            <a href="#contact" class="btn btn-small">Réserver</a>
-                            <span class="payment-info">4 450 000 Ar à la commande</span>
+        <!-- Section Plan Tarifaire & Suivi Financier (Initialement masquée) -->
+        <section class="mb-5 financial-section" id="financial-section">
+            <h2 class="h4 fw-bold mb-3 text-light">Plan Tarifaire & Suivi Financier</h2>
+            <div class="row g-3">
+                <!-- Plan tarifaire -->
+                <div class="col-md-6">
+                    <div class="card p-4 h-100">
+                        <h3 class="h5 fw-bold mb-3 text-light">Plan Tarifaire</h3>
+                        <div id="pricing-plan">
+                            <p class="mb-1"><strong>1. Base obligatoire</strong></p>
+                            <p class="text-muted small ms-3">Site vitrine : <span class="text-muted">600 000 Ar</span></p>
+                            <p class="mb-1"><strong>2. Options complémentaires</strong></p>
+                            <ul class="list-unstyled ms-3">
+                                <li>Hébergement + Nom de domaine + Mail Pro : <span class="text-muted">250 000 Ar</span></li>
+                                <li>SEO : <span class="text-muted">250 000 Ar</span></li>
+                                <li>Réservation en ligne (Table / Chambre) : <span class="text-muted">300 000 Ar</span></li>
+                                <li>Commande en ligne : <span class="text-muted">300 000 Ar</span></li>
+                                <li>Maintenance : <span class="text-muted">100 000 Ar / mois</span></li>
+                            </ul>
+                            <p class="mb-1"><strong>3. Formules stratégiques (packs clés en main)</strong></p>
+                            <details class="pack-details">
+                                <summary>Pack Essentiel : 1 100 000 Ar</summary>
+                                <ul>
+                                    <li>Site vitrine</li>
+                                    <li>Hébergement + Mail Pro</li>
+                                    <li>SEO</li>
+                                </ul>
+                            </details>
+                            <details class="pack-details">
+                                <summary>Pack Business : 1 400 000 Ar</summary>
+                                <ul>
+                                    <li>Site vitrine</li>
+                                    <li>Hébergement + Mail Pro</li>
+                                    <li>SEO</li>
+                                    <li>Réservation en ligne (Table OU Chambre)</li>
+                                </ul>
+                            </details>
+                            <details class="pack-details">
+                                <summary>Pack Premium : 1 700 000 Ar</summary>
+                                <ul>
+                                    <li>Site vitrine</li>
+                                    <li>Hébergement + Mail Pro</li>
+                                    <li>SEO</li>
+                                    <li>Réservation en ligne (Table OU Chambre)</li>
+                                    <li>Commande en ligne</li>
+                                    <li>Maintenance : 100 000 Ar / mois</li>
+                                </ul>
+                            </details>
                         </div>
                     </div>
                 </div>
-
-                <!-- Produit 2 -->
-                <div class="produit-card bestseller">
-                    <div class="produit-badge">Best-seller</div>
-                    <div class="produit-image">
-                        <img src="images/table-jacaranda.jpg" alt="Table en bois de jacaranda massif">
-                        <div class="quick-view">Voir détails</div>
-                    </div>
-                    <div class="produit-info">
-                        <h3>Table "Jacaranda" 6 personnes</h3>
-                        <div class="produit-meta">
-                            <span><i class="fas fa-ruler-combined"></i> L180 x P90 x H75cm</span>
-                            <span><i class="fas fa-palette"></i> Bois naturel</span>
-                        </div>
-                        <div class="produit-prix">12 500 000 Ar</div>
-                        <div class="produit-actions">
-                            <a href="#contact" class="btn btn-small">Réserver</a>
-                            <span class="payment-info">6 250 000 Ar à la commande</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Produit 3 -->
-                <div class="produit-card">
-                    <div class="produit-image">
-                        <img src="images/buffet-scultpé.jpg" alt="Buffet en bois sculpté artisanal">
-                        <div class="quick-view">Voir détails</div>
-                    </div>
-                    <div class="produit-info">
-                        <h3>Buffet "Sakalava" Sculpté</h3>
-                        <div class="produit-meta">
-                            <span><i class="fas fa-ruler-combined"></i> L150 x P50 x H85cm</span>
-                            <span><i class="fas fa-palette"></i> Teck vieilli</span>
-                        </div>
-                        <div class="produit-prix">6 750 000 Ar</div>
-                        <div class="produit-actions">
-                            <a href="#contact" class="btn btn-small">Réserver</a>
-                            <span class="payment-info">3 375 000 Ar à la commande</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Produit 4 -->
-                <div class="produit-card">
-                    <div class="produit-image">
-                        <img src="images/fauteuil-cuir.jpg" alt="Fauteuil en cuir pleine fleur">
-                        <div class="quick-view">Voir détails</div>
-                    </div>
-                    <div class="produit-info">
-                        <h3>Fauteuil "Majunga" en Cuir</h3>
-                        <div class="produit-meta">
-                            <span><i class="fas fa-ruler-combined"></i> L75 x P85 x H95cm</span>
-                            <span><i class="fas fa-palette"></i> Cuir brun</span>
-                        </div>
-                        <div class="produit-prix">4 200 000 Ar</div>
-                        <div class="produit-actions">
-                            <a href="#contact" class="btn btn-small">Réserver</a>
-                            <span class="payment-info">2 100 000 Ar à la commande</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Produit 5 -->
-                <div class="produit-card">
-                    <div class="produit-image">
-                        <img src="images/lit-bois-massif.jpg" alt="Lit king size en bois massif">
-                        <div class="quick-view">Voir détails</div>
-                    </div>
-                    <div class="produit-info">
-                        <h3>Lit "Andasibe" King Size</h3>
-                        <div class="produit-meta">
-                            <span><i class="fas fa-ruler-combined"></i> L200 x P180 x H110cm</span>
-                            <span><i class="fas fa-palette"></i> Acajou rouge</span>
-                        </div>
-                        <div class="produit-prix">9 800 000 Ar</div>
-                        <div class="produit-actions">
-                            <a href="#contact" class="btn btn-small">Réserver</a>
-                            <span class="payment-info">4 900 000 Ar à la commande</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Produit 6 -->
-                <div class="produit-card nouveau">
-                    <div class="produit-badge">Nouveau</div>
-                    <div class="produit-image">
-                        <img src="images/table-basse-marbre.jpg" alt="Table basse en marbre et laiton">
-                        <div class="quick-view">Voir détails</div>
-                    </div>
-                    <div class="produit-info">
-                        <h3>Table Basse "Marbre Vert"</h3>
-                        <div class="produit-meta">
-                            <span><i class="fas fa-ruler-combined"></i> Ø100 x H45cm</span>
-                            <span><i class="fas fa-palette"></i> Marbre vert/laiton</span>
-                        </div>
-                        <div class="produit-prix">5 500 000 Ar</div>
-                        <div class="produit-actions">
-                            <a href="#contact" class="btn btn-small">Réserver</a>
-                            <span class="payment-info">2 750 000 Ar à la commande</span>
+                <!-- Suivi financier -->
+                <div class="col-md-6">
+                    <div class="card p-4 h-100">
+                        <h3 class="h5 fw-bold mb-3 text-light">Suivi Financier</h3>
+                        <div id="financial-tracker">
+                            <div class="mb-3">
+                                <label for="ca-input" class="form-label">Chiffre d'affaires total</label>
+                                <div class="input-group">
+                                    <input type="text" id="ca-input" class="form-control" value="0" readonly>
+                                    <span class="input-group-text">Ar</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ca-remaining" class="form-label">Reste à atteindre</label>
+                                <div class="input-group">
+                                    <input type="text" id="ca-remaining" class="form-control" value="45 000 000" readonly>
+                                    <span class="input-group-text">Ar</span>
+                                </div>
+                            </div>
+                            <div class="text-center mt-4">
+                                <h4 class="h6 fw-bold text-light">Ajouter une vente</h4>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <button class="btn btn-outline-success" onclick="addSale(1100000)">
+                                        <i class="fas fa-tag me-1"></i>Pack Essentiel
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="addSale(1400000)">
+                                        <i class="fas fa-tag me-1"></i>Pack Business
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="addSale(1700000)">
+                                        <i class="fas fa-tag me-1"></i>Pack Premium
+                                    </button>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-link text-danger" onclick="resetSales()">
+                                        <i class="fas fa-sync-alt me-1"></i>Réinitialiser les ventes
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- Achievements Section -->
+        <section class="mb-5">
+            <h2 class="h4 fw-bold mb-3 text-light">Récompenses</h2>
+            <div class="card p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="h5 fw-bold mb-3 text-light">Badges</h3>
+                        <div>
+                            <span class="achievement-badge"><i class="fas fa-trophy me-1"></i>Premier pas</span>
+                            <span class="achievement-badge"><i class="fas fa-bolt me-1"></i>Productivité</span>
+                            <span class="achievement-badge"><i class="fas fa-check-circle me-1"></i>Consistance</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="h5 fw-bold mb-3 text-light">Prochaines récompenses</h3>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-transparent text-light border-secondary">
+                                <i class="fas fa-lock me-2 text-muted"></i>Maître vendeur (à 10 ventes)
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary">
+                                <i class="fas fa-lock me-2 text-muted"></i>Expert CRM (à 50 tâches complétées)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Tâches par jour -->
+        <section>
+            <h2 class="h4 fw-bold mb-3 text-light">Tâches par Jour</h2>
+            <div id="daily-tasks-container">
+                <!-- Les tâches quotidiennes seront insérées ici -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Level Up Notification -->
+    <div class="level-up" id="level-up">
+        <div class="display-1 text-warning mb-3">
+            <i class="fas fa-trophy"></i>
         </div>
-    </section>
+        <h3 class="text-light">Niveau Atteint!</h3>
+        <p class="text-muted">Félicitations! Vous avez atteint le niveau <span id="level-number">2</span></p>
+    </div>
 
-    <!-- Section Collections -->
-    <section id="collections" class="collections">
-        <div class="container">
-            <h2>Explorez Nos Collections</h2>
-            <p class="section-subtitle">Des styles variés pour toutes les inspirations</p>
-            
-            <div class="collections-grid">
-                <a href="#" class="collection-card" style="background-image: url('images/collection-ethnique.jpg')">
-                    <div class="collection-overlay"></div>
-                    <h3>Ethnique Chic</h3>
-                    <p>Pièces artisanales traditionnelles</p>
-                    <span class="collection-count">18 articles</span>
-                </a>
-                <a href="#" class="collection-card" style="background-image: url('images/collection-moderne.jpg')">
-                    <div class="collection-overlay"></div>
-                    <h3>Moderne Malagasy</h3>
-                    <p>Design contemporain local</p>
-                    <span class="collection-count">22 articles</span>
-                </a>
-                <a href="#" class="collection-card" style="background-image: url('images/collection-luxe.jpg')">
-                    <div class="collection-overlay"></div>
-                    <h3>Luxe Tropical</h3>
-                    <p>Matériaux nobles et exclusifs</p>
-                    <span class="collection-count">15 articles</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section Contact -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <div class="contact-form">
-                <h2>Réservez Votre Pièce</h2>
-                <p>Remplissez ce formulaire pour initier votre achat en 2 paiements</p>
-                
-                <form>
-                    <div class="form-group">
-                        <label for="name">Nom complet *</label>
-                        <input type="text" id="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="contact">Téléphone/WhatsApp *</label>
-                        <input type="text" id="contact" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="product">Produit souhaité *</label>
-                        <select id="product" required>
-                            <option value="">-- Sélectionnez --</option>
-                            <option value="canape-tana">Canapé "Tana" - 8 900 000 Ar</option>
-                            <option value="table-jacaranda">Table "Jacaranda" - 12 500 000 Ar</option>
-                            <option value="buffet-sakalava">Buffet "Sakalava" - 6 750 000 Ar</option>
-                            <option value="fauteuil-majunga">Fauteuil "Majunga" - 4 200 000 Ar</option>
-                            <option value="lit-andasibe">Lit "Andasibe" - 9 800 000 Ar</option>
-                            <option value="table-marbre">Table "Marbre Vert" - 5 500 000 Ar</option>
-                            <option value="autre">Autre produit (précisez ci-dessous)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Informations complémentaires</label>
-                        <textarea id="message" rows="4" placeholder="Adresse de livraison, questions spécifiques..."></textarea>
-                    </div>
-                    <div class="form-submit">
-                        <button type="submit" class="btn btn-primary">Envoyer ma demande</button>
-                        <p class="payment-reminder">Un acompte de 50% sera demandé pour réserver votre pièce</p>
-                    </div>
-                </form>
-            </div>
-            <div class="contact-info">
-                <h3>Notre Showroom</h3>
-                <div class="info-card">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <div>
-                        <h4>Adresse</h4>
-                        <p>Lot IVG 45, Ambatonakanga<br>Antananarivo 101, Madagascar</p>
-                        <a href="#" class="map-link">Voir sur la carte <i class="fas fa-arrow-right"></i></a>
-                    </div>
+    <!-- Modal pour ajouter/modifier une tâche -->
+    <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="taskModalLabel">Ajouter une tâche</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="info-card">
-                    <i class="fas fa-clock"></i>
-                    <div>
-                        <h4>Horaires</h4>
-                        <p>Lundi-Vendredi : 9h-18h<br>
-                        Samedi : 9h-13h<br>
-                        Dimanche : Sur rendez-vous</p>
-                    </div>
-                </div>
-                <div class="info-card">
-                    <i class="fas fa-phone-alt"></i>
-                    <div>
-                        <h4>Contact Direct</h4>
-                        <p>+261 34 12 345 67 (appel/WhatsApp)<br>
-                        contact@madaluxe.mg</p>
-                    </div>
-                </div>
-                
-                <div class="social-contact">
-                    <h4>Suivez nos nouveautés</h4>
-                    <div class="social-icons">
-                        <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
-                        <a href="#" class="social-icon" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <a href="#" class="logo">Mada<span>Luxe</span></a>
-                    <p>Curateurs de meubles haut de gamme à Madagascar.<br>
-                    Sélection, qualité et service premium.</p>
-                    <div class="footer-social">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                    </div>
-                </div>
-                <div class="footer-col">
-                    <h4>Acheter</h4>
-                    <ul>
-                        <li><a href="#nouveautes">Nouveautés</a></li>
-                        <li><a href="#collections">Collections</a></li>
-                        <li><a href="#fonctionnement">Processus d'achat</a></li>
-                        <li><a href="#">Paiement en 2 fois</a></li>
-                        <li><a href="#">Livraison</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Entreprise</h4>
-                    <ul>
-                        <li><a href="#fonctionnement">Notre concept</a></li>
-                        <li><a href="#">Nos artisans partenaires</a></li>
-                        <li><a href="#">Demande de catalogue</a></li>
-                        <li><a href="#">Recrutement</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Newsletter</h4>
-                    <p>Recevez en avant-première nos nouveaux arrivages :</p>
-                    <form class="newsletter-form">
-                        <input type="email" placeholder="Votre email" required>
-                        <button type="submit">S'abonner</button>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <div class="mb-3">
+                            <label for="task-text" class="form-label">Tâche</label>
+                            <input type="text" class="form-control" id="task-text" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="task-day" class="form-label">Jour</label>
+                            <input type="number" class="form-control" id="task-day" min="1" max="90" required>
+                        </div>
+                        <input type="hidden" id="task-id">
                     </form>
-                    <p class="privacy-text">En vous inscrivant, vous acceptez notre <a href="#">politique de confidentialité</a>.</p>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 MadaLuxe. Tous droits réservés.</p>
-                <div class="legal-links">
-                    <a href="#">CGV</a>
-                    <a href="#">Mentions légales</a>
-                    <a href="#">Politique de retour</a>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="taskForm" class="btn btn-primary">Sauvegarder</button>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Three.js Scene Setup
+            let scene, camera, renderer, controls;
+            let floatingObjects = [];
+            
+            function initThreeJS() {
+                // Create scene
+                scene = new THREE.Scene();
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x000000, 0);
+                document.getElementById('three-container').appendChild(renderer.domElement);
+                
+                // Add controls
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.rotateSpeed = 0.5;
+                
+                // Add ambient light
+                const ambientLight = new THREE.AmbientLight(0x404040);
+                scene.add(ambientLight);
+                
+                // Add directional light
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+                
+                // Create floating geometric objects
+                const geometry = new THREE.IcosahedronGeometry(0.2, 0);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: 0x6a40e6,
+                    shininess: 100,
+                    emissive: 0x332266
+                });
+                
+                for (let i = 0; i < 20; i++) {
+                    const object = new THREE.Mesh(geometry, material.clone());
+                    object.position.x = Math.random() * 10 - 5;
+                    object.position.y = Math.random() * 10 - 5;
+                    object.position.z = Math.random() * 10 - 5;
+                    object.rotation.x = Math.random() * Math.PI;
+                    object.rotation.y = Math.random() * Math.PI;
+                    object.velocity = {
+                        x: (Math.random() - 0.5) * 0.01,
+                        y: (Math.random() - 0.5) * 0.01,
+                        z: (Math.random() - 0.5) * 0.01
+                    };
+                    object.material.color.setHex(Math.random() * 0xffffff);
+                    scene.add(object);
+                    floatingObjects.push(object);
+                }
+                
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize, false);
+                
+                // Start animation
+                animate();
+            }
+            
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Animate floating objects
+                floatingObjects.forEach(obj => {
+                    obj.rotation.x += obj.velocity.x;
+                    obj.rotation.y += obj.velocity.y;
+                    obj.rotation.z += obj.velocity.z;
+                    
+                    // Bounce within boundaries
+                    if (Math.abs(obj.position.x) > 5) obj.velocity.x *= -1;
+                    if (Math.abs(obj.position.y) > 5) obj.velocity.y *= -1;
+                    if (Math.abs(obj.position.z) > 5) obj.velocity.z *= -1;
+                });
+                
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            
+            // Initialize Three.js
+            initThreeJS();
+
+            // Game state
+            let activeUser = 'Wells';
+            let data = {};
+            const caGoal = 45000000;
+            let userStats = {
+                'Wells': { xp: 0, level: 1, completedTasks: 0, sales: 0, meetings: 0 },
+                'Anna': { xp: 0, level: 1, completedTasks: 0, sales: 0, meetings: 0 }
+            };
+            
+            // Objectifs par utilisateur
+            const userObjectives = {
+                'Wells': {
+                    weekly: { sales: 2, revenue: 2500000 },
+                    monthly: { sales: 8, revenue: 10000000 }
+                },
+                'Anna': {
+                    weekly: { meetings: 5, qualifiedLeads: 10 },
+                    monthly: { meetings: 20, qualifiedLeads: 40 }
+                }
+            };
+            
+            // Objectifs actuels
+            let currentObjectives = {
+                'Wells': { sales: 0, revenue: 0 },
+                'Anna': { meetings: 0, qualifiedLeads: 0 }
+            };
+            
+            const initialTasks = {
+                'Wells': [],
+                'Anna': []
+            };
+
+            const addTaskToInitial = (user, day, text) => {
+                const dayIndex = day - 1;
+                if (!initialTasks[user][dayIndex]) {
+                    initialTasks[user][dayIndex] = {
+                        day: day,
+                        tasks: []
+                    };
+                }
+                initialTasks[user][dayIndex].tasks.push({
+                    id: crypto.randomUUID(),
+                    text: text,
+                    completed: false
+                });
+            };
+
+            // Tâches de Wells - Mois 1
+            addTaskToInitial('Wells', 1, 'Mettre à jour les modèles du CRM avec les nouvelles catégories de leads (Restaurant, Hôtel, etc).');
+            addTaskToInitial('Wells', 2, 'Créer des templates de site vitrine et de page de commande/réservation.');
+            addTaskToInitial('Wells', 3, 'Préparer 2 versions de démo du site de réservation (une pour restaurant, une pour hôtel).');
+            addTaskToInitial('Wells', 4, 'Intégrer le site de démo dans le portfolio de vente du CRM.');
+            addTaskToInitial('Wells', 5, 'Répéter les démonstrations pour être fluide.');
+            addTaskToInitial('Wells', 6, 'Effectuer des ajustements finaux sur le site de démo et le CRM si nécessaire.');
+            for (let i = 7; i <= 30; i++) {
+                addTaskToInitial('Wells', i, 'Utiliser le CRM pour gérer les projets clients, de la signature au lancement.');
+                addTaskToInitial('Wells', i, 'Effectuer des démos clients du site de réservation et des options de personnalisation.');
+                addTaskToInitial('Wells', i, 'Développer les sites vendus en utilisant la base de code existante.');
+                addTaskToInitial('Wells', i, 'Suivre les clients existants pour proposer des upsells (maintenance, SEO).');
+            }
+
+            // Tâches de Wells - Mois 2
+            for (let i = 31; i <= 60; i++) {
+                addTaskToInitial('Wells', i, 'Créer un nouveau template de site de commande en ligne pour une démo.');
+                addTaskToInitial('Wells', i, 'Développer et livrer 2 à 3 projets clients en simultané.');
+                addTaskToInitial('Wells', i, 'Développer une base de code réutilisable pour les fonctionnalités avancées.');
+                addTaskToInitial('Wells', i, 'Lancer une campagne publicitaire ciblée (Google Ads) pour les forfaits supérieurs.');
+            }
+
+            // Tâches de Wells - Mois 3
+            for (let i = 61; i <= 90; i++) {
+                addTaskToInitial('Wells', i, 'Prospection de grands comptes (hôtels de luxe, chaînes de restaurants) dans le CRM.');
+                addTaskToInitial('Wells', i, 'Développer de nouvelles solutions sur-mesure (applications mobiles).');
+                addTaskToInitial('Wells', i, 'Préparer le rapport final du trimestre et analyser les données du CRM.');
+            }
+
+            // Tâches d'Anna - Mois 1
+            addTaskToInitial('Anna', 1, 'Importer 500 prospects à partir du fichier Excel dans le CRM et qualifier les 50 premiers.');
+            addTaskToInitial('Anna', 2, 'Personnaliser les messages de prospection dans le CRM pour chaque segment de leads.');
+            addTaskToInitial('Anna', 3, 'Envoyer les premières vagues d\'emails et de messages via le CRM.');
+            addTaskToInitial('Anna', 4, 'Suivre les réponses dans le CRM et planifier les appels de qualification.');
+            addTaskToInitial('Anna', 5, 'Organiser le calendrier de Wells pour les démonstrations dans le CRM.');
+            addTaskToInitial('Anna', 6, 'Mettre à jour le statut des prospects dans le pipeline de vente du CRM (Rendez-vous, Devis, etc).');
+            for (let i = 7; i <= 30; i++) {
+                addTaskToInitial('Anna', i, 'Qualifier 20 nouveaux prospects par jour dans le CRM.');
+                addTaskToInitial('Anna', i, 'Suivi et relance des prospects et clients via le CRM (mails, appels).');
+                addTaskToInitial('Anna', i, 'Planifier des posts sur les réseaux sociaux pour les témoignages clients.');
+            }
+
+            // Tâches d'Anna - Mois 2
+            for (let i = 31; i <= 60; i++) {
+                addTaskToInitial('Anna', i, 'Identifier les "prospects chauds" dans le CRM et les pousser dans la pipeline de vente.');
+                addTaskToInitial('Anna', i, 'Générer des rapports d\'activité et de performances de vente via le CRM.');
+                addTaskToInitial('Anna', i, 'Gérer les tâches de suivi pour les clients existants (renouvellements de maintenance, satisfaction).');
+            }
+
+            // Tâches d'Anna - Mois 3
+            for (let i = 61; i <= 90; i++) {
+                addTaskToInitial('Anna', i, 'Analyser les données du CRM pour identifier les sources de leads les plus efficaces.');
+                addTaskToInitial('Anna', i, 'Créer des tableaux de bord personnalisés dans le CRM pour suivre les KPIs.');
+                addTaskToInitial('Anna', i, 'Former un nouvel employé à l\'utilisation du CRM.');
+            }
+            
+            let financialState = {
+                caTotal: 0
+            };
+
+            // Récupération des éléments DOM
+            const toggleFinancialBtn = document.getElementById('toggle-financial-btn');
+            const financialSection = document.getElementById('financial-section');
+            const caInput = document.getElementById('ca-input');
+            const caRemaining = document.getElementById('ca-remaining');
+            const wellsBtn = document.getElementById('wells-btn');
+            const annaBtn = document.getElementById('anna-btn');
+            const wellsAvatar = document.getElementById('wells-avatar');
+            const annaAvatar = document.getElementById('anna-avatar');
+            const progressContainer = document.getElementById('progress-bars-container');
+            const dailyTasksContainer = document.getElementById('daily-tasks-container');
+            const taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
+            const taskForm = document.getElementById('taskForm');
+            const taskText = document.getElementById('task-text');
+            const taskDay = document.getElementById('task-day');
+            const taskId = document.getElementById('task-id');
+            const taskModalLabel = document.getElementById('taskModalLabel');
+            const xpBar = document.getElementById('xp-bar');
+            const userLevel = document.getElementById('user-level');
+            const userXp = document.getElementById('user-xp');
+            const nextLevelXp = document.getElementById('next-level-xp');
+            const levelUpNotification = document.getElementById('level-up');
+            const levelNumber = document.getElementById('level-number');
+            const completedTasksEl = document.getElementById('completed-tasks');
+            const salesCountEl = document.getElementById('sales-count');
+            const meetingsCountEl = document.getElementById('meetings-count');
+            const successRateEl = document.getElementById('success-rate');
+            const objectivesContainer = document.getElementById('objectives-container');
+
+            // Initialisation des données
+            const loadData = () => {
+                try {
+                    const storedTasks = JSON.parse(localStorage.getItem('plannerData'));
+                    if (storedTasks) {
+                        data = storedTasks;
+                    } else {
+                        data = initialTasks;
+                        saveData();
+                    }
+                } catch (e) {
+                    console.error("Erreur lors du chargement des tâches depuis localStorage.", e);
+                    data = initialTasks;
+                    saveData();
+                }
+                
+                try {
+                    const storedFinancials = JSON.parse(localStorage.getItem('financialState'));
+                    if (storedFinancials) {
+                        financialState = storedFinancials;
+                        updateFinancialUI();
+                    }
+                } catch (e) {
+                    console.error("Erreur lors du chargement des données financières depuis localStorage.", e);
+                }
+                
+                try {
+                    const storedStats = JSON.parse(localStorage.getItem('userStats'));
+                    if (storedStats) {
+                        userStats = storedStats;
+                        updateUserStatsUI();
+                    }
+                } catch (e) {
+                    console.error("Erreur lors du chargement des stats utilisateur depuis localStorage.", e);
+                }
+                
+                try {
+                    const storedObjectives = JSON.parse(localStorage.getItem('currentObjectives'));
+                    if (storedObjectives) {
+                        currentObjectives = storedObjectives;
+                    }
+                } catch (e) {
+                    console.error("Erreur lors du chargement des objectifs depuis localStorage.", e);
+                }
+            };
+
+            // Sauvegarde des données
+            const saveData = () => {
+                localStorage.setItem('plannerData', JSON.stringify(data));
+                localStorage.setItem('financialState', JSON.stringify(financialState));
+                localStorage.setItem('userStats', JSON.stringify(userStats));
+                localStorage.setItem('currentObjectives', JSON.stringify(currentObjectives));
+            };
+
+            // Mise à jour de l'interface utilisateur
+            const updateUI = () => {
+                renderProgressBars();
+                renderDailyTasks();
+                updateUserStatsUI();
+                renderObjectives();
+            };
+
+            // Mise à jour des statistiques utilisateur
+            const updateUserStatsUI = () => {
+                const stats = userStats[activeUser];
+                userLevel.textContent = stats.level;
+                userXp.textContent = stats.xp;
+                nextLevelXp.textContent = stats.level * 100;
+                
+                const xpPercentage = (stats.xp / (stats.level * 100)) * 100;
+                xpBar.style.width = `${Math.min(xpPercentage, 100)}%`;
+                
+                // Mettre à jour les statistiques
+                completedTasksEl.textContent = stats.completedTasks;
+                salesCountEl.textContent = stats.sales;
+                meetingsCountEl.textContent = stats.meetings;
+                
+                // Calculer le taux de réussite
+                const totalTasks = data[activeUser].reduce((total, day) => total + (day ? day.tasks.length : 0), 0);
+                const successRate = totalTasks > 0 ? Math.round((stats.completedTasks / totalTasks) * 100) : 0;
+                successRateEl.textContent = `${successRate}%`;
+            };
+
+            // Mise à jour de l'interface financière
+            const updateFinancialUI = () => {
+                caInput.value = formatCurrency(financialState.caTotal);
+                caRemaining.value = formatCurrency(caGoal - financialState.caTotal);
+            };
+
+            // Formatage des montants
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('fr-FR').format(amount);
+            };
+
+            // Ajout d'une vente
+            window.addSale = (amount) => {
+                financialState.caTotal += amount;
+                userStats[activeUser].sales += 1;
+                userStats[activeUser].xp += 50;
+                currentObjectives[activeUser].sales += 1;
+                currentObjectives[activeUser].revenue += amount;
+                
+                // Vérifier si un niveau est atteint
+                checkLevelUp();
+                
+                updateFinancialUI();
+                updateUserStatsUI();
+                renderObjectives();
+                saveData();
+                
+                // Effet visuel
+                createFloatingCoin();
+                createConfetti();
+            };
+
+            // Ajout d'un rendez-vous (pour Anna)
+            const addMeeting = () => {
+                userStats['Anna'].meetings += 1;
+                userStats['Anna'].xp += 30;
+                currentObjectives['Anna'].meetings += 1;
+                
+                // Vérifier si un niveau est atteint
+                checkLevelUp();
+                
+                updateUserStatsUI();
+                renderObjectives();
+                saveData();
+                
+                // Effet visuel
+                createConfetti();
+            };
+
+            // Réinitialisation des ventes
+            window.resetSales = () => {
+                if (confirm("Êtes-vous sûr de vouloir réinitialiser toutes les ventes ?")) {
+                    financialState.caTotal = 0;
+                    updateFinancialUI();
+                    saveData();
+                }
+            };
+
+            // Vérification du niveau
+            const checkLevelUp = () => {
+                const stats = userStats[activeUser];
+                const xpNeeded = stats.level * 100;
+                
+                if (stats.xp >= xpNeeded) {
+                    stats.level += 1;
+                    stats.xp = 0;
+                    
+                    // Afficher la notification de niveau
+                    levelNumber.textContent = stats.level;
+                    levelUpNotification.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        levelUpNotification.style.display = 'none';
+                    }, 3000);
+                    
+                    updateUserStatsUI();
+                    saveData();
+                }
+            };
+
+            // Création d'une pièce flottante (effet visuel)
+            const createFloatingCoin = () => {
+                const coin = document.createElement('div');
+                coin.className = 'floating-coin';
+                coin.style.left = `${Math.random() * 100}%`;
+                coin.style.top = `${Math.random() * 100}%`;
+                document.body.appendChild(coin);
+                
+                setTimeout(() => {
+                    coin.remove();
+                }, 3000);
+            };
+
+            // Création de confettis (effet visuel)
+            const createConfetti = () => {
+                for (let i = 0; i < 30; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = `${Math.random() * 100}%`;
+                    confetti.style.top = `${Math.random() * 100}%`;
+                    confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    document.body.appendChild(confetti);
+                    
+                    // Animation
+                    setTimeout(() => {
+                        confetti.style.opacity = '1';
+                        confetti.style.transform = `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`;
+                        confetti.style.transition = 'all 2s ease-out';
+                    }, 10);
+                    
+                    // Suppression
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 2000);
+                }
+            };
+
+            // Rendu des barres de progression
+            const renderProgressBars = () => {
+                const userTasks = data[activeUser] || [];
+                const totalTasks = userTasks.flatMap(day => day ? day.tasks : []).length;
+                const completedTasks = userTasks.flatMap(day => day ? day.tasks.filter(task => task.completed) : []).length;
+                
+                const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+                
+                let progressColorClass = 'bg-success';
+                if (progressPercentage < 33) {
+                    progressColorClass = 'progress-bar-red';
+                } else if (progressPercentage < 66) {
+                    progressColorClass = 'progress-bar-yellow';
+                }
+                
+                progressContainer.innerHTML = `
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted">Progression des tâches</span>
+                            <span class="small text-muted">${completedTasks}/${totalTasks} (${Math.round(progressPercentage)}%)</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px;">
+                            <div class="progress-bar ${progressColorClass}" role="progressbar" style="width: ${progressPercentage}%" aria-valuenow="${progressPercentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted">Objectif financier</span>
+                            <span class="small text-muted">${formatCurrency(financialState.caTotal)}/${formatCurrency(caGoal)} Ar</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: ${(financialState.caTotal / caGoal) * 100}%" aria-valuenow="${(financialState.caTotal / caGoal) * 100}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // Rendu des objectifs
+            const renderObjectives = () => {
+                const objectives = userObjectives[activeUser];
+                const current = currentObjectives[activeUser];
+                let html = '';
+                
+                if (activeUser === 'Wells') {
+                    // Objectifs de Wells (ventes)
+                    const weeklySalesProgress = Math.min(100, (current.sales / objectives.weekly.sales) * 100);
+                    const weeklyRevenueProgress = Math.min(100, (current.revenue / objectives.weekly.revenue) * 100);
+                    const monthlySalesProgress = Math.min(100, (current.sales / objectives.monthly.sales) * 100);
+                    const monthlyRevenueProgress = Math.min(100, (current.revenue / objectives.monthly.revenue) * 100);
+                    
+                    html = `
+                        <div class="col-md-6">
+                            <div class="objective-card ${current.sales >= objectives.weekly.sales ? 'completed' : ''}">
+                                <h5 class="fw-bold">Objectif Hebdomadaire - Ventes</h5>
+                                <p>${current.sales} / ${objectives.weekly.sales} ventes</p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${weeklySalesProgress}%"></div>
+                                </div>
+                                <p>${formatCurrency(current.revenue)} / ${formatCurrency(objectives.weekly.revenue)} Ar</p>
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: ${weeklyRevenueProgress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="objective-card ${current.sales >= objectives.monthly.sales ? 'completed' : ''}">
+                                <h5 class="fw-bold">Objectif Mensuel - Ventes</h5>
+                                <p>${current.sales} / ${objectives.monthly.sales} ventes</p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${monthlySalesProgress}%"></div>
+                                </div>
+                                <p>${formatCurrency(current.revenue)} / ${formatCurrency(objectives.monthly.revenue)} Ar</p>
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: ${monthlyRevenueProgress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Objectifs d'Anna (rendez-vous)
+                    const weeklyMeetingsProgress = Math.min(100, (current.meetings / objectives.weekly.meetings) * 100);
+                    const monthlyMeetingsProgress = Math.min(100, (current.meetings / objectives.monthly.meetings) * 100);
+                    
+                    html = `
+                        <div class="col-md-6">
+                            <div class="objective-card ${current.meetings >= objectives.weekly.meetings ? 'completed' : ''}">
+                                <h5 class="fw-bold">Objectif Hebdomadaire - RDV</h5>
+                                <p>${current.meetings} / ${objectives.weekly.meetings} rendez-vous</p>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${weeklyMeetingsProgress}%"></div>
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="addMeeting()">
+                                        <i class="fas fa-calendar-plus me-1"></i>Ajouter un RDV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="objective-card ${current.meetings >= objectives.monthly.meetings ? 'completed' : ''}">
+                                <h5 class="fw-bold">Objectif Mensuel - RDV</h5>
+                                <p>${current.meetings} / ${objectives.monthly.meetings} rendez-vous</p>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${monthlyMeetingsProgress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                objectivesContainer.innerHTML = html;
+            };
+
+            // Rendu des tâches quotidiennes
+            const renderDailyTasks = () => {
+                const userTasks = data[activeUser] || [];
+                let html = '';
+                
+                // Regrouper les tâches par mois
+                const months = [
+                    { name: "Mois 1", days: userTasks.slice(0, 30) },
+                    { name: "Mois 2", days: userTasks.slice(30, 60) },
+                    { name: "Mois 3", days: userTasks.slice(60, 90) }
+                ];
+                
+                months.forEach((month, monthIndex) => {
+                    const monthNumber = monthIndex + 1;
+                    html += `
+                        <div class="month-section mb-4">
+                            <div class="month-header d-flex justify-content-between align-items-center" data-month="${monthNumber}">
+                                <h3 class="h5 mb-0">${month.name}</h3>
+                                <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                            </div>
+                            <div class="month-content mt-3" id="month-${monthNumber}" style="display:none;">
+                    `;
+                    
+                    // Regrouper les jours par semaine
+                    for (let week = 0; week < 5; week++) {
+                        const weekStart = week * 7;
+                        const weekDays = month.days.slice(weekStart, weekStart + 7);
+                        
+                        html += `
+                            <div class="week-section mb-3">
+                                <div class="week-header d-flex justify-content-between align-items-center" data-week="${monthNumber}-${week+1}">
+                                    <h4 class="h6 mb-0">Semaine ${week+1}</h4>
+                                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                                </div>
+                                <div class="week-content mt-2" id="week-${monthNumber}-${week+1}" style="display:none;">
+                        `;
+                        
+                        weekDays.forEach((dayData, dayIndex) => {
+                            const dayNumber = monthIndex * 30 + week * 7 + dayIndex + 1;
+                            if (dayData && dayData.tasks && dayData.tasks.length > 0) {
+                                html += `
+                                    <div class="card mb-2">
+                                        <div class="card-header day-heading" data-day="${dayNumber}">
+                                            <h5 class="h6 mb-0 d-flex justify-content-between align-items-center">
+                                                <span>Jour ${dayNumber}</span>
+                                                <span class="badge bg-primary rounded-pill">${dayData.tasks.length}</span>
+                                            </h5>
+                                        </div>
+                                        <div class="tasks-container" id="day-${dayNumber}" style="display:none;">
+                                            <div class="card-body p-3">
+                                `;
+                                
+                                dayData.tasks.forEach(task => {
+                                    html += `
+                                        <div class="task-card card mb-2 ${task.completed ? 'completed' : 'pending'}" data-task-id="${task.id}">
+                                            <div class="card-body d-flex justify-content-between align-items-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" ${task.completed ? 'checked' : ''} id="task-${task.id}">
+                                                    <label class="form-check-label ${task.completed ? 'text-decoration-line-through text-muted' : ''}" for="task-${task.id}">
+                                                        ${task.text}
+                                                    </label>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-secondary edit-task" data-task-id="${task.id}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                            <div class="task-completion-effect"></div>
+                                        </div>
+                                    `;
+                                });
+                                
+                                html += `
+                                                <button class="btn btn-sm btn-outline-primary add-task-btn" data-day="${dayNumber}">
+                                                    <i class="fas fa-plus me-1"></i>Ajouter une tâche
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                dailyTasksContainer.innerHTML = html;
+                
+                // Ajouter les écouteurs d'événements
+                document.querySelectorAll('.month-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const monthNumber = header.getAttribute('data-month');
+                        const content = document.getElementById(`month-${monthNumber}`);
+                        const icon = header.querySelector('.toggle-icon i');
+                        
+                        if (content.style.display === 'none') {
+                            content.style.display = 'block';
+                            icon.className = 'fas fa-chevron-up';
+                        } else {
+                            content.style.display = 'none';
+                            icon.className = 'fas fa-chevron-down';
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.week-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const weekId = header.getAttribute('data-week');
+                        const content = document.getElementById(`week-${weekId}`);
+                        const icon = header.querySelector('.toggle-icon i');
+                        
+                        if (content.style.display === 'none') {
+                            content.style.display = 'block';
+                            icon.className = 'fas fa-chevron-up';
+                            header.parentElement.classList.add('open');
+                        } else {
+                            content.style.display = 'none';
+                            icon.className = 'fas fa-chevron-down';
+                            header.parentElement.classList.remove('open');
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.day-heading').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const dayNumber = header.getAttribute('data-day');
+                        const content = document.getElementById(`day-${dayNumber}`);
+                        
+                        if (content.style.display === 'none') {
+                            content.style.display = 'block';
+                        } else {
+                            content.style.display = 'none';
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.form-check-input').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const taskId = e.target.closest('.task-card').getAttribute('data-task-id');
+                        const isChecked = e.target.checked;
+                        
+                        // Trouver la tâche dans les données
+                        for (let day of data[activeUser]) {
+                            if (day && day.tasks) {
+                                const task = day.tasks.find(t => t.id === taskId);
+                                if (task) {
+                                    task.completed = isChecked;
+                                    
+                                    // Mettre à jour l'apparence
+                                    const taskCard = e.target.closest('.task-card');
+                                    if (isChecked) {
+                                        taskCard.classList.add('completed');
+                                        taskCard.classList.remove('pending');
+                                        
+                                        // Ajouter de l'XP
+                                        userStats[activeUser].completedTasks += 1;
+                                        userStats[activeUser].xp += 10;
+                                        
+                                        // Vérifier si un niveau est atteint
+                                        checkLevelUp();
+                                        
+                                        // Effet visuel
+                                        const effect = taskCard.querySelector('.task-completion-effect');
+                                        effect.style.opacity = '1';
+                                        setTimeout(() => {
+                                            effect.style.opacity = '0';
+                                        }, 1000);
+                                    } else {
+                                        taskCard.classList.remove('completed');
+                                        taskCard.classList.add('pending');
+                                        
+                                        // Retirer l'XP
+                                        userStats[activeUser].completedTasks -= 1;
+                                        userStats[activeUser].xp -= 10;
+                                    }
+                                    
+                                    updateUserStatsUI();
+                                    saveData();
+                                    renderProgressBars();
+                                    break;
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.edit-task').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const taskId = button.getAttribute('data-task-id');
+                        
+                        // Trouver la tâche dans les données
+                        for (let day of data[activeUser]) {
+                            if (day && day.tasks) {
+                                const task = day.tasks.find(t => t.id === taskId);
+                                if (task) {
+                                    taskText.value = task.text;
+                                    taskDay.value = day.day;
+                                    taskId.value = task.id;
+                                    
+                                    taskModalLabel.textContent = 'Modifier la tâche';
+                                    taskModal.show();
+                                    break;
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.add-task-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const day = button.getAttribute('data-day');
+                        
+                        taskText.value = '';
+                        taskDay.value = day;
+                        taskId.value = '';
+                        
+                        taskModalLabel.textContent = 'Ajouter une tâche';
+                        taskModal.show();
+                    });
+                });
+            };
+
+            // Gestion du formulaire de tâche
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const text = taskText.value.trim();
+                const day = parseInt(taskDay.value);
+                const id = taskId.value;
+                
+                if (text && day >= 1 && day <= 90) {
+                    // Créer ou mettre à jour la tâche
+                    if (id) {
+                        // Modification d'une tâche existante
+                        for (let dayData of data[activeUser]) {
+                            if (dayData && dayData.tasks) {
+                                const taskIndex = dayData.tasks.findIndex(t => t.id === id);
+                                if (taskIndex !== -1) {
+                                    dayData.tasks[taskIndex].text = text;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        // Ajout d'une nouvelle tâche
+                        const dayIndex = day - 1;
+                        if (!data[activeUser][dayIndex]) {
+                            data[activeUser][dayIndex] = {
+                                day: day,
+                                tasks: []
+                            };
+                        }
+                        
+                        data[activeUser][dayIndex].tasks.push({
+                            id: crypto.randomUUID(),
+                            text: text,
+                            completed: false
+                        });
+                    }
+                    
+                    saveData();
+                    renderDailyTasks();
+                    renderProgressBars();
+                    
+                    taskModal.hide();
+                }
+            });
+
+            // Basculer l'affichage de la section financière
+            toggleFinancialBtn.addEventListener('click', () => {
+                if (financialSection.classList.contains('show')) {
+                    financialSection.classList.remove('show');
+                    toggleFinancialBtn.innerHTML = '<i class="fas fa-coins me-2"></i>Afficher le suivi financier';
+                    toggleFinancialBtn.classList.remove('btn-success');
+                    toggleFinancialBtn.classList.add('btn-outline-success');
+                } else {
+                    financialSection.classList.add('show');
+                    toggleFinancialBtn.innerHTML = '<i class="fas fa-times me-2"></i>Masquer le suivi financier';
+                    toggleFinancialBtn.classList.remove('btn-outline-success');
+                    toggleFinancialBtn.classList.add('btn-success');
+                }
+            });
+
+            // Changer d'utilisateur
+            wellsBtn.addEventListener('click', () => {
+                if (activeUser !== 'Wells') {
+                    activeUser = 'Wells';
+                    wellsBtn.classList.add('active');
+                    annaBtn.classList.remove('active');
+                    wellsAvatar.classList.add('active');
+                    annaAvatar.classList.remove('active');
+                    updateUI();
+                }
+            });
+
+            annaBtn.addEventListener('click', () => {
+                if (activeUser !== 'Anna') {
+                    activeUser = 'Anna';
+                    annaBtn.classList.add('active');
+                    wellsBtn.classList.remove('active');
+                    annaAvatar.classList.add('active');
+                    wellsAvatar.classList.remove('active');
+                    updateUI();
+                }
+            });
+
+            // Exposer addMeeting globalement
+            window.addMeeting = addMeeting;
+
+            // Initialiser l'application
+            loadData();
+            updateUI();
+        });
+    </script>
 </body>
 </html>
